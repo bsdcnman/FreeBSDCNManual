@@ -33,7 +33,7 @@
 .Os
 .Sh NAME
 .Nm pipe
-.Nd create descriptor pair for interprocess communication
+.Nd 创建一对描述符用于进程间通信
 .Sh LIBRARY
 .Lb libc
 .Sh SYNOPSIS
@@ -41,61 +41,49 @@
 .Ft int
 .Fn pipe "int fildes[2]"
 .Sh DESCRIPTION
-The
 .Fn pipe
-system call
-creates a
-.Em pipe ,
-which is an object allowing
-bidirectional data flow,
-and allocates a pair of file descriptors.
+系统调用创建一个支持双向数据流的
+.Em 管道(pipe) ,
+并分配一对文件描述符.
 .Pp
-By convention, the first descriptor is normally used as the
-.Em read end
-of the pipe,
-and the second is normally the
-.Em write end ,
-so that data written to
+按照约定，第一个描述符通常用作管道的
+.Em 读取端(read end) ,
+第二个描述符则用作
+.Em 写入端(write end) ,
+因此写入
 .Fa fildes[1]
-appears on (i.e., can be read from)
+的数据将会出现(读取)于
 .Fa fildes[0] .
-This allows the output of one program to be
-sent
-to another program:
-the source's standard output is set up to be
-the write end of the pipe,
-and the sink's standard input is set up to be
-the read end of the pipe.
-The pipe itself persists until all its associated descriptors are
-closed.
+这样就能把一个程序的输出发送给另一个程序, 例如: 
+数据源的标准输出可以建立
+在管道的写入端, 
+而数据宿的标准输入可以建立在管道的读取端. 管道本身将会持
+续存在, 直到它所关联的全部描述符都被关闭.
 .Pp
-A pipe that has had an end closed is considered
-.Em widowed .
-Writing on such a pipe causes the writing process to receive
-a
+如果某个管道有一端已被关闭, 则可以认为它处于
+.Em 半关闭(widowed)
+状态. 进程对
+这种管道进行写入，会收到
 .Dv SIGPIPE
-signal.
-Widowing a pipe is the only way to deliver end-of-file to a reader:
-after the reader consumes any buffered data, reading a widowed pipe
-returns a zero count.
+信号. 管道窗口是告诉读者文件已经到头的唯
+一方式, 例如: 当读者消耗完所有缓冲的数据之后，读取一个半关闭的管道将返回
+0个字节. 
 .Pp
-The bidirectional nature of this implementation of pipes is not
-portable to older systems, so it is recommended to use the convention
-for using the endpoints in the traditional manner when using a
-pipe in one direction.
+本管道的实现所具备的双向性，对于老的系统来说是不可移植的. 因此当使用管道
+进行单向通信时，建议使用约定俗成的传统方式来操作端口. 
 .Sh RETURN VALUES
 .Rv -std pipe
 .Sh ERRORS
-The
+如果遇到以下情形
 .Fn pipe
-system call will fail if:
+系统调用将会失败: 
 .Bl -tag -width Er
 .It Bq Er EMFILE
-Too many descriptors are active.
+活跃的文件描述符过多了. 
 .It Bq Er ENFILE
-The system file table is full.
+系统文件表已经满了. 
 .It Bq Er ENOMEM
-Not enough kernel memory to establish a pipe.
+没有足够的内核内存来建立管道.
 .El
 .Sh SEE ALSO
 .Xr sh 1 ,
@@ -104,10 +92,9 @@ Not enough kernel memory to establish a pipe.
 .Xr socketpair 2 ,
 .Xr write 2
 .Sh HISTORY
-The
 .Fn pipe
-function appeared in
+函数始现于
 .At v3 .
 .Pp
-Bidirectional pipes were first used on
+双向管道首次用于
 .At V.4 .
