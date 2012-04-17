@@ -1,0 +1,1 @@
+tbl | groff -S -P-h -Wall -mtty-char -man -Tutf8 -Kutf8 -P-c | less
