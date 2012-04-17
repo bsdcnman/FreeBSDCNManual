@@ -33,7 +33,7 @@
 .Os
 .Sh NAME
 .Nm fork
-.Nd create a new process
+.Nd 创建一个新的进程
 .Sh LIBRARY
 .Lb libc
 .Sh SYNOPSIS
@@ -42,83 +42,67 @@
 .Ft pid_t
 .Fn fork void
 .Sh DESCRIPTION
-The
 .Fn fork
-system call causes creation of a new process.
-The new process (child process) is an exact copy of the
-calling process (parent process) except for the following:
+系统调用使一个新的进程得以创建. 新进程(子进程)确切的来说是调用者进
+程(父进程)的复制, 以下特征除外:
 .Bl -bullet -offset indent
 .It
-The child process has a unique process ID.
+子进程拥有唯一的进程编号. 
 .It
-The child process has a different parent
-process ID (i.e., the process ID of the parent process).
+子进程拥有不同的父进程编号(即创建子进程的进程的编号). 
 .It
-The child process has its own copy of the parent's descriptors.
-These descriptors reference the same underlying objects, so that,
-for instance, file pointers in file objects are shared between
-the child and the parent, so that an
+子进程对父进程的描述符有它自己的一份复制. 这些描述符引用着相同
+的对象, 因此举例来说, 文件对象中的文件指针将共享于父子进程之间, 
+如果在子进程中对该描述符调用
 .Xr lseek 2
-on a descriptor in the child process can affect a subsequent
+也会影响到父进程今后调用
 .Xr read 2
-or
+或
 .Xr write 2
-by the parent.
-This descriptor copying is also used by the shell to
-establish standard input and output for newly created processes
-as well as to set up pipes.
+所产生的结果. 这种复制描述符的特性被 shell 
+用来为新创建的进程建立标准输入输出，以及建立各种管道.
 .It
-The child process' resource utilizations
-are set to 0; see
+子进程的资源利用率被设置为0; 参考
 .Xr setrlimit 2 .
 .It
-All interval timers are cleared; see
+所有的间隔定时器被复位; 参考
 .Xr setitimer 2 .
 .El
 .Sh RETURN VALUES
-Upon successful completion,
+如果创建成功
 .Fn fork
-returns a value
-of 0 to the child process and returns the process ID of the child
-process to the parent process.
-Otherwise, a value of -1 is returned
-to the parent process, no child process is created, and the global
-variable
+在子进程中返回0, 在父进程中返回子进程的编号. 否则, 
+在父进程中返回-1, 子进程不会被创建, 并且会设置全局变量
 .Va errno
-is set to indicate the error.
+来指示错误. 
 .Sh ERRORS
-The
 .Fn fork
-system call will fail and no child process will be created if:
+系统调用遇到如下情形时会失败, 并且没有子进程被创建: 
 .Bl -tag -width Er
 .It Bq Er EAGAIN
-The system-imposed limit on the total
-number of processes under execution would be exceeded.
-The limit is given by the
+超过了系统强制限制的能够同时运行的总进程数. 
+这一限制由
 .Xr sysctl 3
-MIB variable
-.Dv KERN_MAXPROC .
-(The limit is actually ten less than this
-except for the super user).
+中的
+.Dv KERN_MAXPROC
+给出
+(除超级用户以外，事实上比该数值还要小十倍).
 .It Bq Er EAGAIN
-The user is not the super user, and
-the system-imposed limit
-on the total number of
-processes under execution by a single user would be exceeded.
-The limit is given by the
+创建者不是超级用户, 并且可能达到了系统强制限制的单个
+用户所能同时运行的总进程数. 这一限制由
 .Xr sysctl 3
-MIB variable
-.Dv KERN_MAXPROCPERUID .
+中的
+.Dv KERN_MAXPROCPERUID
+给出.
 .It Bq Er EAGAIN
-The user is not the super user, and
-the soft resource limit corresponding to the
+创建者不是超级用户, 并且软性资源限制所对应的
 .Fa resource
-argument
+参数可能达到了
 .Dv RLIMIT_NPROC
-would be exceeded (see
+(参考
 .Xr getrlimit 2 ) .
 .It Bq Er ENOMEM
-There is insufficient swap space for the new process.
+没有足够的交换空间分配给新进程了. 
 .El
 .Sh SEE ALSO
 .Xr execve 2 ,
@@ -128,7 +112,6 @@ There is insufficient swap space for the new process.
 .Xr vfork 2 ,
 .Xr wait 2
 .Sh HISTORY
-The
 .Fn fork
-function appeared in
+函数始现于
 .At v6 .
