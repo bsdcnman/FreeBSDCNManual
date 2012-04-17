@@ -1,0 +1,4 @@
+HOWTO preview Chinese UTF-8 manual
+1. Install textproc/groff (x11 is not necessary)
+2. Type rehash
+3. cat cn/man2/pipe.2 | ./show
