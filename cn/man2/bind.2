@@ -1,0 +1,123 @@
+.\" Copyright (c) 1983, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)bind.2	8.1 (Berkeley) 6/4/93
+.\" $FreeBSD: src/lib/libc/sys/bind.2,v 1.29.4.1 2011/09/23 00:51:37 kensmith Exp $
+.\"
+.Dd June 4, 1993
+.Dt BIND 2
+.Os
+.Sh NAME
+.Nm bind
+.Nd 把一个本地协议地址赋给套接口
+.Sh LIBRARY
+.Lb libc
+.Sh SYNOPSIS
+.In sys/types.h
+.In sys/socket.h
+.Ft int
+.Fn bind "int s" "const struct sockaddr *addr" "socklen_t addrlen"
+.Sh DESCRIPTION
+.Fn bind
+系统调用能把一个本地协议地址赋给套接口. 
+当套接口由
+.Xr socket 2
+创建
+之后, 它就位于地址族空间中了, 但此时尚未赋以协议地址. 而
+.Fn bind
+系统调用
+可以请求把
+.Fa addr
+赋予套接口. 
+.Sh NOTES
+在UNIX域中绑定一个地址将会在文件系统中创建一个套接口文件, 当不再需要该文
+件时, 调用者必须主动删除它(使用
+.Xr unlink 2 ) .
+.Pp
+对不同的通信域, 绑定地址所遵循的规则也不同. 详细信息可参考手册中的第4节.
+.Pp
+为了提高可移植性, 你必须先将套接口地址这个结构体清零, 然后才能填充并将其
+指针传给
+.Fn bind .
+.Sh RETURN VALUES
+.Rv -std bind
+.Sh ERRORS
+.Fn bind
+系统调用遇到以下情形将会失败: 
+.Bl -tag -width Er
+.It Bq Er EAGAIN
+完成该调用所需的内核资源暂时不可用.
+.It Bq Er EBADF
+参数
+.Fa s
+不是一个合法的描述符. 
+.It Bq Er EINVAL
+套接口已经和一个地址绑定了, 而且该协议不支持绑定到新的
+地址; 或者套接口已被关闭.
+.It Bq Er ENOTSOCK
+参数
+.Fa s
+不是一个套接口
+.It Bq Er EADDRNOTAVAIL
+所指定的地址对于本机器来说是不可用的. 
+.It Bq Er EADDRINUSE
+所指定的地址已经被占用了. 
+.It Bq Er EACCES
+所指定的地址处于被保护状态，并且当前用户没有权限访问它. 
+.It Bq Er EFAULT
+参数
+.Fa addr
+所指向的不是合法的用户空间地址. 
+.El
+.Pp
+以下错误是在UNIX域上绑定地址时特有的.
+.Bl -tag -width EADDRNOTAVA
+.It Bq Er ENOTDIR
+路径前缀中的某个组成部分不是一个目录.
+.It Bq Er ENAMETOOLONG
+路径名中的某个组成部分达到了255个字符, 或者整个路径名达到了
+1023个字符.
+.It Bq Er ENOENT
+路径名中的某个前缀不存在. 
+.It Bq Er ELOOP
+解读路径名的时候遇到了太多的符号链接.
+.It Bq Er EIO
+创建目录或者分配i节点(inode)的时候发生了读写错误. 
+.It Bq Er EROFS
+该文件名可能位于只读的文件系统中。
+.It Bq Er EISDIR
+所给的路径名为空.
+.El
+.Sh SEE ALSO
+.Xr connect 2 ,
+.Xr getsockname 2 ,
+.Xr listen 2 ,
+.Xr socket 2
+.Sh HISTORY
+.Fn bind
+系统调用始现于
+.Bx 4.2 .
