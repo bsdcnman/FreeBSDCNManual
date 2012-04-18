@@ -1,0 +1,158 @@
+.\" Copyright (c) 1983, 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	From: @(#)listen.2	8.2 (Berkeley) 12/11/93
+.\" $FreeBSD: src/lib/libc/sys/listen.2,v 1.30.16.1 2011/09/23 00:51:37 kensmith Exp $
+.\"
+.Dd August 29, 2005
+.Dt LISTEN 2
+.Os
+.Sh NAME
+.Nm listen
+.Nd 监听对套接口的连接
+.Sh LIBRARY
+.Lb libc
+.Sh SYNOPSIS
+.In sys/types.h
+.In sys/socket.h
+.Ft int
+.Fn listen "int s" "int backlog"
+.Sh DESCRIPTION
+为了处理连接, 首先应该调用
+.Xr socket 2
+创建套接口, 再由
+.Fn listen
+将其转换为
+可接受连接的监听套接口, 并指定连接队列的最大限制, 然后就能调用
+.Xr accept 2
+接受连接了. 
+.Fn listen
+系统调用只适用于类型为
+.Dv SOCK_STREAM
+或者
+.Dv SOCK_SEQPACKET
+的套节口.
+.Pp
+参数
+.Fa backlog
+定义了等待连接的队列最大能增长到多少. 而实际的最大队列长度为
+.Fa backlog
+值的1.5倍. 
+对于一个已经处于监听状态的套节口来说, 可以再次调用
+.Fn listen
+来指定新的
+.Fa backlog
+参数, 从而改变其最大队列长度. 当队列已满时, 
+如果还有新的连接进来, 客户端就会得到名为
+.Er ECONNREFUSED
+的错误提示, 或者对
+于TCP来说, 该连接会被悄悄的丢弃. 
+.Pp
+当前监听套接口的队列长度可通过
+.Xr netstat 1
+命令来查询. 
+.Pp
+注意, 在
+.Fx 4.5
+引入syncache机制以前, 参数
+.Fa backlog
+同时决定了半开连
+接队列的长度, 该队列存放着处于TCP三次握手过程中的TCP套接口. 而现在, 这类
+尚未完全建立的连接则全部存放于syncache中, 因此队列长度不再影响它们了.
+现在已经没有必要通过增大
+.Fa backlog
+值来帮助处理拒绝服务式攻击. 
+.Pp
+.Xr sysctl 3
+中的
+.Va kern.ipc.somaxconn
+变量指定了
+.Fa backlog
+的硬性限制; 如果你指
+定了一个大于
+.Va kern.ipc.somaxconn
+或者小于0的数,
+.Fa backlog
+会被自动地强制设为
+.Va kern.ipc.somaxconn .
+.Sh INTERACTION WITH ACCEPT FILTERS
+When accept filtering is used on a socket, a second queue will
+be used to hold sockets that have connected, but have not yet
+met their accept filtering criteria.
+Once the criteria has been
+met, these sockets will be moved over into the completed connection
+queue to be
+.Xr accept 2 Ns ed .
+If this secondary queue is full and a
+new connection comes in, the oldest socket which has not yet met
+its accept filter criteria will be terminated.
+.Pp
+This secondary queue, like the primary listen queue, is sized
+according to the
+.Fa backlog
+argument.
+.Sh RETURN VALUES
+.Rv -std listen
+.Sh ERRORS
+遇到以下情形时 
+.Fn listen
+系统调用将会失败: 
+.Bl -tag -width Er
+.It Bq Er EBADF
+参数
+.Fa s
+不是一个有效的描述符.
+.It Bq Er EINVAL
+套接口已被连接, 或正处于连接过程中. 
+.It Bq Er ENOTSOCK
+参数
+.Fa s
+不是一个套接口. 
+.It Bq Er EOPNOTSUPP
+套接口不是
+.Fn listen
+所支持的类型.
+.El
+.Sh SEE ALSO
+.Xr netstat 1 ,
+.Xr accept 2 ,
+.Xr connect 2 ,
+.Xr socket 2 ,
+.Xr sysctl 3 ,
+.Xr sysctl 8 ,
+.Xr accept_filter 9
+.Sh HISTORY
+.Fn listen
+系统调用始现于
+.Bx 4.2 .
+允许在系统运行的时候配置最大
+.Fa backlog ,
+以及通过指定负的
+.Fa backlog
+来请求最大的可用值, 是在
+.Fx 2.2
+引入的.
